@@ -15,25 +15,28 @@
 # limitations under the License.
 #
 
-version: 2
-updates:
-  - package-ecosystem: "maven"
-    directory: "/"
-    open-pull-requests-limit: 10
-    schedule:
-      interval: "weekly"
-    ignore:
-      - dependency-name: "*"
-        update-types: [ "version-update:semver-major" ]
-  - package-ecosystem: "npm"
-    directory: "./eventmesh-dashboard-view"
-    schedule:
-      interval: "monthly"
-    ignore:
-      - dependency-name: "*"
-        # Disable front-end PRs temporarily since 'npm run build' fails
-        update-types: [ "version-update:semver-major", "version-update:semver-minor", "version-update:semver-patch" ]
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "monthly"
+name: Dependabot Auto-approve
+on: pull_request_target
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  # https://docs.github.com/en/code-security/dependabot/working-with-dependabot/automating-dependabot-with-github-actions
+  # Pull request Auto merge is not enabled for this repository
+  dependabot:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Approve PR
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
